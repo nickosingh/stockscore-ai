@@ -48,21 +48,22 @@ export default function StockScoreAILandingPage() {
       setIsSubmitting(true);
       setMessage("");
 
-      const res = await fetch("/api/signup", {
+      const res = await fetch("https://formspree.io/f/xnjgoaro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ email: cleanedEmail }),
+        body: JSON.stringify({
+          email: cleanedEmail,
+        }),
       });
 
-      const data = await res.json();
-
-      if (data.ok) {
-        setMessage("You're on the list!");
+      if (res.ok) {
+        setMessage("You're on the list! 🚀");
         setEmail("");
       } else {
-        setMessage(data.error || "Something went wrong.");
+        setMessage("Something went wrong.");
       }
     } catch {
       setMessage("Something went wrong.");
@@ -129,8 +130,8 @@ export default function StockScoreAILandingPage() {
             </h1>
 
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">
-              StockScore AI turns confusing market data into a simple stock health score, trend signal,
-              risk view, and plain-English AI explanation.
+              StockScore AI turns confusing market data into a simple stock health score, trend
+              signal, risk view, and plain-English AI explanation.
             </p>
 
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/20">
@@ -174,7 +175,7 @@ export default function StockScoreAILandingPage() {
                     >
                       {symbol}
                     </button>
-                    {index < popularStocks.length - 1 ? (
+                    {index < Math.min(popularStocks.length, 12) - 1 ? (
                       <span className="text-slate-600">•</span>
                     ) : null}
                   </span>
@@ -307,7 +308,7 @@ export default function StockScoreAILandingPage() {
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {[
               ["1", "Search a ticker", "Type any stock symbol to instantly pull the latest stock view."],
-              ["2", "See the StockScore AI score", "Get a simple health score out of 100 with instant labels."],
+              ["2", "See the score", "Get a simple health score out of 100 with instant labels."],
               [
                 "3",
                 "Understand the stock instantly",
@@ -328,7 +329,7 @@ export default function StockScoreAILandingPage() {
         <section className="mx-auto max-w-7xl px-6 py-16">
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ["StockScore AI Score", "An overall stock health score out of 100."],
+              ["Score", "An overall stock health score out of 100."],
               ["Trend", "See whether the stock is moving up, sideways, or down."],
               ["Risk", "Understand volatility at a glance."],
               ["AI Explanation", "Plain-English reasoning instead of complex jargon."],
@@ -350,7 +351,7 @@ export default function StockScoreAILandingPage() {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {popularStocks.map((symbol) => (
+            {popularStocks.slice(0, 20).map((symbol) => (
               <button
                 key={symbol}
                 onClick={() => goToTicker(symbol)}
@@ -370,8 +371,8 @@ export default function StockScoreAILandingPage() {
                 Simple scores people will want to post
               </h2>
               <p className="mt-4 max-w-xl leading-8 text-slate-400">
-                StockScore AI pages are built to be visual, easy to understand, and naturally shareable
-                across social media, group chats, and investing communities.
+                StockScore AI pages are built to be visual, easy to understand, and naturally
+                shareable across social media, group chats, and investing communities.
               </p>
             </div>
 
