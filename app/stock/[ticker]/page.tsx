@@ -48,19 +48,7 @@ export async function generateMetadata({
 
   return {
     title: `${symbol} Stock Analysis, Score & AI Forecast | StockScore AI`,
-    description: `StockScore AI AI analysis for ${symbol}. See stock score, risk, valuation, trend, and AI explanation in plain English.`,
-    openGraph: {
-      title: `${symbol} Stock Analysis | StockScore AI`,
-      description: `See StockScore AI score, valuation, trend, and AI explanation for ${symbol}.`,
-      url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/stock/${symbol}`,
-      siteName: "StockScore AI",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${symbol} Stock Analysis | StockScore AI`,
-      description: `See StockScore AI score, valuation, trend, and AI explanation for ${symbol}.`,
-    },
+    description: `StockScore AI analysis for ${symbol}. See stock score, buy/hold view, risk, valuation, trend, and AI explanation in plain English.`,
   };
 }
 
@@ -205,6 +193,14 @@ function getRecommendationColor(recommendation: string) {
   return "text-rose-300";
 }
 
+function getRecommendationBox(recommendation: string) {
+  if (recommendation === "BUY") return "border-emerald-400/20 bg-emerald-400/10";
+  if (recommendation === "BUY ON DIP") return "border-cyan-400/20 bg-cyan-400/10";
+  if (recommendation === "HOLD") return "border-amber-400/20 bg-amber-400/10";
+  if (recommendation === "WAIT") return "border-orange-400/20 bg-orange-400/10";
+  return "border-rose-400/20 bg-rose-400/10";
+}
+
 function getDecisionReasons(
   trend: string,
   risk: string,
@@ -239,25 +235,30 @@ function getAiExplanation(
   risk: string,
   trend: string,
   sentiment: string,
-  valuation: string
+  valuation: string,
+  recommendation: string
 ) {
   if (changePercent === null || changePercent === undefined) {
     return `${name} has limited live data available in this MVP view, so StockScore AI is showing a neutral read until more indicators are added.`;
   }
 
-  if (changePercent >= 2) {
-    return `${name} is showing strong recent momentum with a ${sentiment.toLowerCase()} tone and a ${risk.toLowerCase()} risk profile. The current move suggests buyers are in control, although the stock currently screens as ${valuation.toLowerCase()} in this MVP valuation check.`;
+  if (recommendation === "BUY") {
+    return `${name} is showing strong recent momentum, supportive sentiment, and manageable risk. In this MVP model, StockScore AI currently reads the stock as a buy candidate, with valuation still within an acceptable range.`;
   }
 
-  if (changePercent >= 0) {
-    return `${name} is trading with a mildly positive tone. The stock currently looks ${trend.toLowerCase()}, sentiment is ${sentiment.toLowerCase()}, and StockScore AI sees it as ${valuation.toLowerCase()} based on this early valuation model.`;
+  if (recommendation === "BUY ON DIP") {
+    return `${name} still looks strong overall, but the valuation appears stretched. StockScore AI sees quality here, though a better entry may come from waiting for a pullback rather than chasing strength.`;
   }
 
-  if (changePercent > -2) {
-    return `${name} is showing some weakness but not a major breakdown. StockScore AI currently reads this as a more cautious setup, with ${risk.toLowerCase()} risk, ${sentiment.toLowerCase()} sentiment, and a ${valuation.toLowerCase()} valuation signal.`;
+  if (recommendation === "HOLD") {
+    return `${name} looks reasonably balanced right now. The stock has supportive traits, but not enough edge for a high-conviction buy call in this MVP model, so StockScore AI currently leans hold.`;
   }
 
-  return `${name} is under noticeable pressure right now, with ${sentiment.toLowerCase()} sentiment and a ${risk.toLowerCase()} risk reading. Until momentum improves, StockScore AI treats this as a weaker near-term setup, while the valuation check currently reads ${valuation.toLowerCase()}.`;
+  if (recommendation === "WAIT") {
+    return `${name} has some promising elements, but the overall setup is not strong enough yet. StockScore AI currently suggests waiting for better momentum, sentiment, or valuation before acting.`;
+  }
+
+  return `${name} currently looks weak in this MVP model, with downside pressure and/or elevated risk. Until the setup improves, StockScore AI treats this as an avoid.`;
 }
 
 export default async function StockPage({
@@ -303,14 +304,6 @@ export default async function StockPage({
             <p className="mt-4 text-slate-200">
               {error instanceof Error ? error.message : "Unknown error"}
             </p>
-            <div className="mt-6">
-              <Link
-                href="/"
-                className="inline-flex rounded-2xl bg-emerald-400 px-5 py-3 font-semibold text-slate-950"
-              >
-                Go back home
-              </Link>
-            </div>
           </div>
         </main>
       </div>
@@ -332,7 +325,8 @@ export default async function StockPage({
     risk,
     trend,
     sentiment,
-    valuation
+    valuation,
+    recommendation
   );
 
   const isPositive = (stock.change ?? 0) >= 0;
@@ -344,8 +338,6 @@ export default async function StockPage({
     { label: "Valuation", value: breakdown.valuation, detail: "Fairer pricing scores better" },
   ];
 
-  const relatedTickers = POPULAR_STOCKS;
-  
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur">
@@ -468,6 +460,17 @@ export default async function StockPage({
               </div>
             </div>
 
+            <div className={`mt-6 rounded-[28px] border p-6 ${getRecommendationBox(recommendation)}`}>
+              <div className="text-xs uppercase tracking-wide text-slate-200">Should I Buy This Stock?</div>
+              <div className={`mt-3 text-4xl font-bold ${getRecommendationColor(recommendation)}`}>
+                {recommendation}
+              </div>
+              <p className="mt-3 text-base leading-8 text-slate-100">
+                StockScore AI currently reads this as <span className="font-semibold">{recommendation}</span>{" "}
+                based on score, valuation, sentiment, and risk.
+              </p>
+            </div>
+
             <div className="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-6">
               <div className="text-xs uppercase tracking-wide text-slate-500">AI Explanation</div>
               <p className="mt-3 text-base leading-8 text-slate-300">{summary}</p>
@@ -475,23 +478,13 @@ export default async function StockPage({
           </section>
 
           <section className="grid gap-6">
-            <div className="rounded-[28px] border border-emerald-400/20 bg-emerald-400/10 p-6">
-              <div className="text-sm uppercase tracking-[0.2em] text-emerald-300">
-                Should I Buy This Stock?
-              </div>
-              <div className={`mt-3 text-3xl font-bold ${getRecommendationColor(recommendation)}`}>
-                {recommendation}
-              </div>
-              <p className="mt-3 leading-8 text-slate-200">
-                StockScore AI currently reads this name as a <span className="font-semibold">{recommendation}</span>{" "}
-                based on score, valuation, sentiment, and risk.
-              </p>
-
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
+              <div className="text-sm text-slate-400">Why this buy/hold view?</div>
               <div className="mt-5 space-y-3">
                 {decisionReasons.map((reason) => (
                   <div
                     key={reason}
-                    className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-slate-100"
+                    className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 text-slate-200"
                   >
                     {reason}
                   </div>
@@ -559,8 +552,7 @@ export default async function StockPage({
                     {valuation}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Early MVP valuation indicator based on simple price and size heuristics. Later this
-                    can be upgraded with earnings, growth, and sector comparisons.
+                    Early MVP valuation indicator based on simple price and size heuristics.
                   </p>
                 </div>
               </div>
@@ -583,14 +575,16 @@ export default async function StockPage({
             <div>
               <h2 className="text-xl font-bold text-white">Is {stock.ticker} overvalued?</h2>
               <p className="mt-2 leading-8 text-slate-300">
-                StockScore AI currently classifies {stock.ticker} as <span className={getValuationColor(valuation)}>{valuation}</span>.
+                StockScore AI currently classifies {stock.ticker} as{" "}
+                <span className={getValuationColor(valuation)}>{valuation}</span>.
               </p>
             </div>
 
             <div>
               <h2 className="text-xl font-bold text-white">Should I buy {stock.ticker}?</h2>
               <p className="mt-2 leading-8 text-slate-300">
-                StockScore AI AI currently suggests: <span className={getRecommendationColor(recommendation)}>{recommendation}</span>.
+                StockScore AI currently suggests:{" "}
+                <span className={getRecommendationColor(recommendation)}>{recommendation}</span>.
               </p>
             </div>
           </div>
@@ -604,8 +598,8 @@ export default async function StockPage({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {relatedTickers
-                .filter((item) => item !== stock.ticker)
+              {POPULAR_STOCKS.filter((item) => item !== stock.ticker)
+                .slice(0, 12)
                 .map((item) => (
                   <Link
                     key={item}
