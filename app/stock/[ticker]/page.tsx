@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import ShareButtons from "./ShareButtons";
 import { POPULAR_STOCKS } from "@/app/lib/watchlists";
 
@@ -278,15 +279,19 @@ export default async function StockPage({
       <div className="min-h-screen bg-slate-950 text-white">
         <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20 text-lg font-bold text-emerald-300">
-                S
-              </div>
-              <div>
-                <div className="text-lg font-semibold tracking-tight">StockScore AI</div>
-                <div className="text-xs text-slate-400">Understand any stock in 10 seconds</div>
-              </div>
-            </Link>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/logo-icon.png"
+              alt="StockScore AI"
+              width={48}
+              height={48}
+              className="rounded-xl object-contain"
+            />
+            <div>
+              <div className="text-lg font-semibold tracking-tight text-white">StockScore AI</div>
+              <div className="text-xs text-slate-400">Understand any stock in 10 seconds</div>
+            </div>
+          </Link>
 
             <Link
               href="/"
